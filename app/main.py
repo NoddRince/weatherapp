@@ -1,6 +1,7 @@
 # python3 -- Weather Application using API
 
 # importing the libraries
+import tkinter as Tk
 from tkinter import *
 import requests
 import json
@@ -52,6 +53,7 @@ city_entry.grid(row=1, column=0, ipady=10, stick=W+E+N+S)
 def city_name():
 
 	# API Call
+	api_key = "cdd1eb843bd640f9bc470969a3068591"
 	api_request = requests.get("https://api.openweathermap.org/data/2.5/weather?q="
 							+ city_entry.get() + "&units=metric&appid="+api_key)
 
