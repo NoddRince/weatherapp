@@ -1,94 +1,150 @@
-from datetime import datetime
+# python3 -- Weather Application using API
+
+# importing the libraries
 from tkinter import *
-
 import requests
+import json
+import datetime
+from PIL import ImageTk, Image
 
-#Initialize Window
- 
-root =Tk()
-root.geometry("400x400") #size of the window by default
-root.resizable(0,0) #to make the window size fixed
-#title of our window
+
+# necessary details
+root = Tk()
 root.title("Weather App")
+root.geometry("450x700")
+root['background'] = "white"
 
-# ----------------------Functions to fetch and display weather info
- 
- 
-def time_format_for_location(utc_with_tz):
-    local_time = datetime.utcfromtimestamp(utc_with_tz)
-    return local_time.time()
- 
- 
-city_value = StringVar()
- 
-def showWeather():
-    #Enter you api key, copies from the OpenWeatherMap dashboard
-    api_key = "cdd1eb843bd640f9bc470969a3068591"  #API
- 
-    # Get city name from user from the input field (later in the code)
-    city_name=city_value.get()
- 
-    # API url
-    weather_url = 'http://api.openweathermap.org/data/2.5/weather?q=' + city_name + '&appid='+api_key
- 
-    # Get the response from fetched url
-    response = requests.get(weather_url)
- 
-    # changing response from json to python readable 
-    weather_info = response.json()
- 
- 
-    tfield.delete("1.0", "end")   #to clear the text field for every new output
- 
-#as per API documentation, if the cod is 200, it means that weather data was successfully fetched
- 
- 
-    if weather_info['cod'] == 200:
-        kelvin = 273 # value of kelvin
- 
-#-----------Storing the fetched values of weather of a city
- 
-        temp = int(weather_info['main']['temp'] - kelvin)                                     #converting default kelvin value to Celcius
-        feels_like_temp = int(weather_info['main']['feels_like'] - kelvin)
-        pressure = weather_info['main']['pressure']
-        humidity = weather_info['main']['humidity']
-        wind_speed = weather_info['wind']['speed'] * 3.6
-        sunrise = weather_info['sys']['sunrise']
-        sunset = weather_info['sys']['sunset']
-        timezone = weather_info['timezone']
-        cloudy = weather_info['clouds']['all']
-        description = weather_info['weather'][0]['description']
- 
-        sunrise_time = time_format_for_location(sunrise + timezone)
-        sunset_time = time_format_for_location(sunset + timezone)
- 
-#assigning Values to our weather varaible, to display as output
-         
-        weather = f"\nWeather of: {city_name}\nTemperature (Celsius): {temp}°\nFeels like in (Celsius): {feels_like_temp}°\nPressure: {pressure} hPa\nHumidity: {humidity}%\nSunrise at {sunrise_time} and Sunset at {sunset_time}\nCloud: {cloudy}%\nInfo: {description}"
-    else:
-        weather = f"\n\tWeather for '{city_name}' not found :( !\n\tPlease Enter valid City Name "
- 
- 
- 
-    tfield.insert(INSERT, weather)   #to insert or send value in our Text Field to display output
- 
- 
- 
-#------------------------------Frontend part of code - Interface
- 
- 
-city_head= Label(root, text = 'Enter City Name', font = 'Arial 12 bold').pack(pady=10) #to generate label heading
- 
-inp_city = Entry(root, textvariable = city_value,  width = 24, font='Arial 14 bold').pack()
- 
- 
-Button(root, command = showWeather, text = "Check Weather", font="Arial 10", bg='lightblue', fg='black', activebackground="teal", padx=5, pady=5 ).pack(pady= 20)
- 
-#to show output
- 
-weather_now = Label(root, text = "The Weather is:", font = 'arial 12 bold').pack(pady=10)
- 
-tfield = Text(root, width=46, height=10)
-tfield.pack()
- 
+# Image
+new = ImageTk.PhotoImage(Image.open('logo.png'))
+panel = Label(root, image=new)
+panel.place(x=0, y=520)
+
+
+# Dates
+dt = datetime.datetime.now()
+date = Label(root, text=dt.strftime('%A--'), bg='white', font=("bold", 15))
+date.place(x=5, y=130)
+month = Label(root, text=dt.strftime('%m %B'), bg='white', font=("bold", 15))
+month.place(x=100, y=130)
+
+# Time
+hour = Label(root, text=dt.strftime('%I : %M %p'),
+			bg='white', font=("bold", 15))
+hour.place(x=10, y=160)
+
+# Theme for the respective time the application is used
+if int((dt.strftime('%I'))) >= 8 & int((dt.strftime('%I'))) <= 5:
+	img = ImageTk.PhotoImage(Image.open('moon.png'))
+	panel = Label(root, image=img)
+	panel.place(x=210, y=200)
+else:
+	img = ImageTk.PhotoImage(Image.open('sun.png'))
+	panel = Label(root, image=img)
+	panel.place(x=210, y=200)
+
+
+# City Search
+city_name = StringVar()
+city_entry = Entry(root, textvariable=city_name, width=45)
+city_entry.grid(row=1, column=0, ipady=10, stick=W+E+N+S)
+
+
+def city_name():
+
+	# API Call
+	api_request = requests.get("https://api.openweathermap.org/data/2.5/weather?q="
+							+ city_entry.get() + "&units=metric&appid="+api_key)
+
+	api = json.loads(api_request.content)
+
+	# Temperatures
+	y = api['main']
+	current_temprature = y['temp']
+	humidity = y['humidity']
+	tempmin = y['temp_min']
+	tempmax = y['temp_max']
+
+	# Coordinates
+	x = api['coord']
+	longtitude = x['lon']
+	latitude = x['lat']
+
+	# Country
+	z = api['sys']
+	country = z['country']
+	citi = api['name']
+
+	# Adding the received info into the screen
+	lable_temp.configure(text=current_temprature)
+	lable_humidity.configure(text=humidity)
+	max_temp.configure(text=tempmax)
+	min_temp.configure(text=tempmin)
+	lable_lon.configure(text=longtitude)
+	lable_lat.configure(text=latitude)
+	lable_country.configure(text=country)
+	lable_citi.configure(text=citi)
+
+
+# Search Bar and Button
+city_nameButton = Button(root, text="Search", command=city_name)
+city_nameButton.grid(row=1, column=1, padx=5, stick=W+E+N+S)
+
+
+# Country Names and Coordinates
+lable_citi = Label(root, text="...", width=0,
+				bg='white', font=("bold", 15))
+lable_citi.place(x=10, y=63)
+
+lable_country = Label(root, text="...", width=0,
+					bg='white', font=("bold", 15))
+lable_country.place(x=135, y=63)
+
+lable_lon = Label(root, text="...", width=0,
+				bg='white', font=("Helvetica", 15))
+lable_lon.place(x=25, y=95)
+lable_lat = Label(root, text="...", width=0,
+				bg='white', font=("Helvetica", 15))
+lable_lat.place(x=95, y=95)
+
+# Current Temperature
+
+lable_temp = Label(root, text="...", width=0, bg='white',
+				font=("Helvetica", 110), fg='black')
+lable_temp.place(x=18, y=220)
+
+# Other temperature details
+
+humi = Label(root, text="Humidity: ", width=0,
+			bg='white', font=("bold", 15))
+humi.place(x=3, y=400)
+
+lable_humidity = Label(root, text="...", width=0,
+					bg='white', font=("bold", 15))
+lable_humidity.place(x=107, y=400)
+
+
+maxi = Label(root, text="Max. Temp.: ", width=0,
+			bg='white', font=("bold", 15))
+maxi.place(x=3, y=430)
+
+max_temp = Label(root, text="...", width=0,
+				bg='white', font=("bold", 15))
+max_temp.place(x=128, y=430)
+
+
+mini = Label(root, text="Min. Temp.: ", width=0,
+			bg='white', font=("bold", 15))
+mini.place(x=3, y=460)
+
+min_temp = Label(root, text="...", width=0,
+				bg='white', font=("bold", 15))
+min_temp.place(x=128, y=460)
+
+
+# Note
+note = Label(root, text="All temperatures in degree celsius",
+			bg='white', font=("italic", 10))
+note.place(x=95, y=495)
+
+
 root.mainloop()
